@@ -5,3 +5,12 @@ date: "2026-10-03"
 output: github_document
 ---
 
+### Problem 1
+
+
+
+### Problem 2
+
+
+
+### Problem 3
