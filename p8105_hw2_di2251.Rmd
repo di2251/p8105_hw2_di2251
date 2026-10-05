@@ -1,16 +1,47 @@
 ---
-title: "p8105_hw2_di2251"
+title: "P8105_HW2_DI2251"
 author: "di2251"
 date: "2026-10-03"
 output: github_document
 ---
+```{r setup, echo=FALSE, message=FALSE}
+library(haven)
+library(tidyverse)
+library(readxl)
+library(ggridges)
+```
 
 ### Problem 1
+```{r data import_q1}
+NYC_subway = read_csv(
+  file = "data/NYC Transit Subway Data.csv"
+) 
 
+```
 
 
 ### Problem 2
+```{r data import_q2}
+Trash_Wheel = read_excel(
+  "data/Trash Wheel Collection Data 2025.xlsx"
+)
+```
 
 
 
 ### Problem 3
+```{r data import_q3}
+MCI_baseline = read_csv(
+  file = "data/data_mci/MCI_baseline.csv"
+)
+
+MCI_amyloid = read_csv(
+  file = "data/data_mci/mci_amyloid.csv"
+)
+```
+
+
+
+
+
+
