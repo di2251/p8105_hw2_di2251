@@ -16,13 +16,7 @@ library(ggridges)
 ```{r data_import_q1}
 NYC_subway = 
   read_csv(file = "data/NYC Transit Subway Data.csv", na = c("", "NA", ".")) |>
-  janitor::clean_names()
-
-NYC_subway
-```
-
-```{r select_q1}
-NYC_subway = NYC_subway |>
+  janitor::clean_names() |>
   select(line, station_name, station_latitude, station_longitude, 
          starts_with("route"), entry, vending, entrance_type, ada) |>
   mutate(entry = case_match(entry, "YES" ~ TRUE, "NO" ~ FALSE))
@@ -30,20 +24,40 @@ NYC_subway = NYC_subway |>
 NYC_subway
 ```
 
+**Data-set description:**
+This data-set contains information related to each entrance and exit for each subway station in New York City. As a part of the initial data cleaning, the variable names of the imported data were automatically reformatted to a standardized format. The 19 variables or columns relevant to the problem were selected out of the 32 total variables (columns) in the original data-set. These selected variables contain information on the subway line, station name, station latitude/longitude, route number, entry, vending, entrance type, and ADA compliance. There are a total of 1,868 rows or observations in the data-set. In addition, the entry variable was converted from a character variable of `YES` vs `NO` to a logical variable. However, this data is not tidy since the lines that run or do not run through each of routes 1 to 11 are independently displayed the information can be collapsed into a character variable listing which lines travel along which routes rather than having them all listed separately. 
 
-**Dataset description:**
+```{r}
+NYC_subway |> distinct(line, station_name)
+```
 
 **How many distinct stations are there?** *Note: stations are identified both by name and by line*
 
+There are 465 distinct stations. 
+
+```{r}
+filter(NYC_subway, ada == TRUE)
+```
+
 **How many stations are ADA compliant?**
 
+468 stations are ADA compliant. 
+
+```{r}
+filter(NYC_subway, vending == "NO")
+
+filter(NYC_subway, vending == "NO" & entry == TRUE)
+```
+
 **What proportion of station entrances/exits without vending allow entrance?**
+
+69 subway stations out of 183 subway stations without vending allow entrance. 
 
 ### Problem 2
 
 ```{r data import_q2}
 Trash_Wheel = read_excel(
-  "data/Trash Wheel Collection Data 2025.xlsx",
+  "data/Trash Wheel Collection Data 2026.xlsx",
   na = c("", "NA", ".")
 )
 
