@@ -53,17 +53,96 @@ filter(NYC_subway, vending == "NO" & entry == TRUE)
 
 69 subway stations out of 183 subway stations without vending allow entrance. 
 
-### Problem 2
+```{r}
+NYC_subway_route = NYC_subway |>
+  mutate(across(route8:route11, as.character)) |>
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    names_prefix = "route",
+    values_to = "route_name"
+  ) |>
+  drop_na(route_name)
 
-```{r data import_q2}
-Trash_Wheel = read_excel(
-  "data/Trash Wheel Collection Data 2026.xlsx",
-  na = c("", "NA", ".")
-)
+NYC_subway_route |>
+  filter(route_name == "A") |>
+  distinct(line, station_name) |>
+  nrow()
 
-Trash_Wheel = janitor::clean_names(Trash_Wheel)
+NYC_subway_route |>
+  filter(route_name == "A", ada == TRUE) |>
+  distinct (line, station_name) |>
+  nrow()
 ```
 
+**How many distinct stations serve the A train? Of the stations that serve the A train, how many are ADA compliant?**
+
+60 distinct stations serve the A train and of those, 17 are ADA compliant. 
+
+### Problem 2
+
+```{r excel_info_q2}
+excel_sheets("data/Trash Wheel Collection Data 2026.xlsx")
+```
+Import `Mr. Trash Wheel` sheet. 
+
+```{r data_import_q2.1, message=FALSE}
+mr_trash = read_excel(
+  "data/Trash Wheel Collection Data 2026.xlsx",
+  sheet = "Mr. Trash Wheel",
+  range = "A2:N742",
+  na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+    sports_balls = as.integer(round(sports_balls))
+  )
+```
+
+Import `Professor Trash Wheel` and `Gwynnda the Good Wheel of the W` sheets.
+
+```{r data_import_q2.2, message=FALSE}
+prof_trash = read_excel(
+  "data/Trash Wheel Collection Data 2026.xlsx",
+  sheet = "Professor Trash Wheel",
+  range = "A2:M139",
+  na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  drop_na(dumpster)
+
+gwynnda_df = read_excel(
+  "data/Trash Wheel Collection Data 2026.xlsx",
+  sheet = "Gwynnda the Good Wheel of the W",
+  range = "A2:L394",
+  na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  drop_na(dumpster)
+```
+
+Label each trash wheel before merging. Identified variables stored in different format and rectified differences.  
+
+```{r label_df}
+mr_trash = mr_trash |>
+  mutate(trash_wheel = "Mr. Trash Wheel", year = as.numeric(year))
+
+mr_trash
+
+prof_trash = prof_trash |>
+  mutate(trash_wheel = "Professor Trash Wheel", plastic_bottles = as.numeric(plastic_bottles))
+
+prof_trash
+
+gwynnda_df = gwynnda_df |>
+  mutate(trash_wheel = "Gwynnda the Good Wheel of the W")
+
+gwynnda_df
+```
+
+Merge all datasets.
+
+```{r}
+all_trash = bind_rows(mr_trash, prof_trash, gwynnda_df)
+```
 
 
 ### Problem 3
