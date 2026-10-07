@@ -162,24 +162,31 @@ The total weight of trash collected by Professor Trash Wheel was `r prof_total_w
 
 ### Problem 3
 
-```{r data import_q3}
-MCI_baseline = read_csv(
+```{r data import_q3.1}
+MCI_recruitment = read_csv(
   file = "data/data_mci/MCI_baseline.csv",
-  na = c("", "NA", ".")
-)
+  skip = 1,
+  na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  mutate(
+    sex = case_match(sex, 0 ~ "female", 1 ~ "male"),
+    apoe4 = case_match(apoe4, 0 ~ "non-carrier", 1 ~ "carrier")
+  )
 
-MCI_baseline = janitor::clean_names(MCI_baseline)
-
-MCI_amyloid = read_csv(
-  file = "data/data_mci/mci_amyloid.csv",
-  na = c("", "NA", ".")
-)
-
-MCI_amyloid = janitor::clean_names(MCI_amyloid)
+MCI_baseline = MCI_recruitment |>
+  filter(is.na(age_at_onset) | age_at_onset > current_age)
 ```
 
+The baseline demographics data were imported from `MCI_baseline.csv`. The first row of the file contained variable descriptions rather than column names, so it was skipped during import (`skip = 1`), and missing values, which were coded as `.` in the raw file, were converted to `NA`. Column names were then cleaned to snake case. The dataset contains `r ncol(MCI_baseline)` variables: participant ID, age at baseline (`current_age`), sex, years of education, APOE4 carrier status, and age at onset of MCI (`age_at_onset`). Sex and APOE4 status were originally coded numerically (1 = male, 0 = female; 1 = carrier, 0 = non-carrier) and were recoded into descriptive character labels. A missing value for age at onset indicates that the participant remained MCI-free during follow-up. 
 
+In total, `r nrow(MCI_recruitment)` participants were recruited. Participants whose age at onset was less than or equal to their baseline age already had MCI at baseline and did not meet the inclusion criteria, so `r nrow(MCI_recruitment) - nrow(MCI_baseline)` participants were removed, leaving `r nrow(MCI_baseline)` participants in the analytic dataset. Of these, `r MCI_baseline |> filter(!is.na(age_at_onset)) |> nrow()` developed MCI during follow-up. The average baseline age was `r round((MCI_baseline |> pull(current_age) |> mean()), 1)` years, and `r round((MCI_baseline |> filter(sex == "female") |> pull(apoe4) |> (\(x) mean(x == "carrier"))()) * 100, 1)`% of women in the study were APOE4 carriers. 
 
+```{r data_import_q3.2}
+MCI_amyloid = read_csv(
+  file = "data/data_mci/mci_amyloid.csv",
+  na = c("", "NA", ".")) |>
+  janitor::clean_names()
+```
 
 
 
