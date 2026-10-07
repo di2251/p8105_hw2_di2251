@@ -13,7 +13,11 @@ library(ggridges)
 
 ### Problem 1
 
-```{r data_import_q1}
+#### Data import and baseline clean
+
+Import data from `NYC Transit Subway Data.csv`:
+
+```{r data_import_q1, warning=FALSE, message=FALSE}
 NYC_subway = 
   read_csv(file = "data/NYC Transit Subway Data.csv", na = c("", "NA", ".")) |>
   janitor::clean_names() |>
@@ -24,36 +28,45 @@ NYC_subway =
 NYC_subway
 ```
 
-**Data-set description:**
-This data-set contains information related to each entrance and exit for each subway station in New York City. As a part of the initial data cleaning, the variable names of the imported data were automatically reformatted to a standardized format. The 19 variables or columns relevant to the problem were selected out of the 32 total variables (columns) in the original data-set. These selected variables contain information on the subway line, station name, station latitude/longitude, route number, entry, vending, entrance type, and ADA compliance. There are a total of 1,868 rows or observations in the data-set. In addition, the entry variable was converted from a character variable of `YES` vs `NO` to a logical variable. However, this data is not tidy since the lines that run or do not run through each of routes 1 to 11 are independently displayed the information can be collapsed into a character variable listing which lines travel along which routes rather than having them all listed separately. 
+This dataset contains information related to each entrance and exit for each subway station in New York City. As a part of the initial data cleaning, the variable names of the imported data were reformatted to snake case and `NA` coding was standardize across variables. 
 
-```{r}
+The `r ncol(NYC_subway)` variables relevant to the problem were selected out of the 32 total variables (columns) in the original dataset. These selected variables contain information on the subway line, station name, station latitude/longitude, route number, entry, vending, entrance type, and ADA compliance. There are a total of `r nrow(NYC_subway)` observations in the dataset. In addition, the entry variable was converted from a character variable of `YES` vs `NO` to a logical variable. 
+
+However, this data is not tidy since the lines that run or do not run through each of routes 1 to 11 are independently displayed the information can be collapsed into a character variable listing which lines travel along which routes rather than having them all listed separately. 
+
+#### Initial data analysis
+
+**How many distinct stations are there?** 
+
+*Note: stations are identified both by name and by line.*
+
+```{r q1.1}
 NYC_subway |> distinct(line, station_name)
 ```
 
-**How many distinct stations are there?** *Note: stations are identified both by name and by line*
-
-There are 465 distinct stations. 
-
-```{r}
-filter(NYC_subway, ada == TRUE)
-```
+There are 465 distinct stations.
 
 **How many stations are ADA compliant?**
 
+```{r q1.2}
+filter(NYC_subway, ada == TRUE)
+```
+
 468 stations are ADA compliant. 
 
-```{r}
+**What proportion of station entrances/exits without vending allow entrance?**
+
+```{r q1.3}
 filter(NYC_subway, vending == "NO")
 
 filter(NYC_subway, vending == "NO" & entry == TRUE)
 ```
 
-**What proportion of station entrances/exits without vending allow entrance?**
+69 subway stations out of 183 subway stations without vending allow entrance.
 
-69 subway stations out of 183 subway stations without vending allow entrance. 
+**How many distinct stations serve the A train? Of the stations that serve the A train, how many are ADA compliant?**
 
-```{r}
+```{r q1.4}
 NYC_subway_route = NYC_subway |>
   mutate(across(route8:route11, as.character)) |>
   pivot_longer(
@@ -75,16 +88,19 @@ NYC_subway_route |>
   nrow()
 ```
 
-**How many distinct stations serve the A train? Of the stations that serve the A train, how many are ADA compliant?**
-
 60 distinct stations serve the A train and of those, 17 are ADA compliant. 
 
 ### Problem 2
 
+#### Data import and baseline clean
+
+Identify sheets in `Trash Wheel Collection Data 2026` excel workbook:
+
 ```{r excel_info_q2}
 excel_sheets("data/Trash Wheel Collection Data 2026.xlsx")
 ```
-Import `Mr. Trash Wheel` sheet. 
+
+Import `Mr. Trash Wheel` sheet: 
 
 ```{r data_import_q2.1, message=FALSE}
 mr_trash = read_excel(
@@ -99,7 +115,7 @@ mr_trash = read_excel(
   )
 ```
 
-Import `Professor Trash Wheel` and `Gwynnda the Good Wheel of the W` sheets.
+Import `Professor Trash Wheel` and `Gwynnda the Good Wheel of the W` sheets:
 
 ```{r data_import_q2.2, message=FALSE}
 prof_trash = read_excel(
@@ -118,6 +134,8 @@ gwynnda_df = read_excel(
   janitor::clean_names() |>
   drop_na(dumpster)
 ```
+
+#### Tidy data
 
 Label each trash wheel before merging. Identified variables stored in different format and rectified differences.  
 
@@ -162,7 +180,11 @@ The total weight of trash collected by Professor Trash Wheel was `r prof_total_w
 
 ### Problem 3
 
-```{r data import_q3.1}
+#### MCI recruitment and baseline data import and clean
+
+Import data from `MCI_baseline.csv` and filter eligible individuals from those recruited for the study:
+
+```{r data import_q3_baseline}
 MCI_recruitment = read_csv(
   file = "data/data_mci/MCI_baseline.csv",
   skip = 1,
@@ -181,12 +203,71 @@ The baseline demographics data were imported from `MCI_baseline.csv`. The first 
 
 In total, `r nrow(MCI_recruitment)` participants were recruited. Participants whose age at onset was less than or equal to their baseline age already had MCI at baseline and did not meet the inclusion criteria, so `r nrow(MCI_recruitment) - nrow(MCI_baseline)` participants were removed, leaving `r nrow(MCI_baseline)` participants in the analytic dataset. Of these, `r MCI_baseline |> filter(!is.na(age_at_onset)) |> nrow()` developed MCI during follow-up. The average baseline age was `r round((MCI_baseline |> pull(current_age) |> mean()), 1)` years, and `r round((MCI_baseline |> filter(sex == "female") |> pull(apoe4) |> (\(x) mean(x == "carrier"))()) * 100, 1)`% of women in the study were APOE4 carriers. 
 
-```{r data_import_q3.2}
+#### MCI amyloid data import and clean
+
+Import data from `MCI_amyloid.csv` and check variable types:
+
+```{r data_import_q3_amyloid}
 MCI_amyloid = read_csv(
   file = "data/data_mci/mci_amyloid.csv",
-  na = c("", "NA", ".")) |>
-  janitor::clean_names()
+  skip = 1,
+  na = c("", "NA", ".", "Na")) |>
+  janitor::clean_names() |>
+  rename(id = study_id)
+
+str(MCI_amyloid)
 ```
 
+Check variable types to make sure they make sense with the type of data recorded. Results display discrepancy in numerical values being stores as characters indicating that the `NA` code is missing a code. 
 
+Filter data to identify any non-numerical values:
 
+```{r data_check_amyloid}
+MCI_amyloid |>
+  pivot_longer(baseline:time_8) |>
+  filter(is.na(as.numeric(value)), !is.na(value)) |>
+  distinct(value)
+
+str(MCI_amyloid)
+```
+
+Go back and add any character values indicating `NA` into the code. 
+
+#### Tidy
+
+Time points are separated into different variables. Collapse data into a single `time` variable and pivot into two columns: `time` and `amyloid value`. 
+
+```{r data_tidy_amyloid}
+MCI_amyloid = MCI_amyloid |>
+  pivot_longer(
+    baseline:time_8,
+    names_to = "time",
+    values_to = "amyloid_ratio"
+  ) |>
+  mutate (
+    time = case_match (time, "baseline" ~ "0", .default = time),
+    time = as.numeric(str_remove(time, "time_"))
+  )
+```
+
+Check which participants appear only in one dataset:
+
+```{r}
+only_baseline = anti_join(MCI_baseline, MCI_amyloid, by = "id")
+
+only_amyloid = MCI_amyloid |>
+  distinct(id) |>
+  anti_join(MCI_baseline, by = "id")
+```
+
+#### Combine and export
+
+```{r}
+MCI_combined = inner_join(MCI_baseline, MCI_amyloid, by = "id")
+
+write_csv(MCI_combined, "data/MCI_combined.csv")
+```
+
+The amyloid dataset contains `r n_distinct(MCI_amyloid$id)` participants, each with amyloid β 42/40 ratio measurements at baseline and up to four follow-up visits. As with the baseline file, the first row contained variable descriptions and was skipped. the ID column was renamed to `id` to match the baseline data, and the measurements, which were originally spread across one column per visit, were pivoted into long format so each row represents one participant at one time point. The tidy dataset has `r nrow(MCI_amyloid)` rows and `r sum(is.na(MCI_amyloid$amyloid_ratio))` missing amyloid values. 
+
+`r nrow(only_baseline)` participants appear only in the baseline data, and `r nrow(only_amyloid)` participants appear only in the amyloid data. After combining the datasets to keep only participants in both, the resulting dataset contains `r n_distinct(MCI_combined$id)` participants and `r nrow(MCI_combined)` rows, with `r ncol(MCI_combined)` variables. 
