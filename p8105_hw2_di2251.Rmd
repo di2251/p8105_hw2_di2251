@@ -144,6 +144,21 @@ Merge all datasets.
 all_trash = bind_rows(mr_trash, prof_trash, gwynnda_df)
 ```
 
+```{r trash_summary, echo = FALSE}
+prof_total_weight = all_trash |>
+  filter(trash_wheel == "Professor Trash Wheel") |>
+  pull(weight_tons) |>
+  sum(na.rm = TRUE)
+
+gwynnda_june2022_butts = all_trash |>
+  filter(trash_wheel == "Gwynnda the Good Wheel of the W", month == "June", year == "2022") |>
+  pull(cigarette_butts) |>
+  sum(na.rm = TRUE)
+```
+
+The combined dataset contains `r nrow(all_trash)` observations from `r n_distinct(all_trash$trash_wheel)` trash wheels, each row representing one dumpster of collected trash. Key variables include `r names(all_trash)`.
+
+The total weight of trash collected by Professor Trash Wheel was `r prof_total_weight` tons. In June 2022, Gwynnda collected `r format(gwynnda_june2022_butts, big.mark = ",")` cigarette butts. 
 
 ### Problem 3
 
